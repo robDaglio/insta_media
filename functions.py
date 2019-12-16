@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import os
 from sys import exit
 from urllib.request import urlopen
 from urllib.error import HTTPError, URLError
@@ -17,20 +16,36 @@ def check_url(url):
     else:
         return html
 
+def usage(script_name):
+    print(f"[!] Usage: {script_name} [-d, --dump] <URL> [-p, --path <PATH>]")
+    print("[!] Options:")
+    print("-d, --dump: Dump all profile media contents.")
+    print("-p, --path: Specify output directory.")
+    exit(0)
+
 def check_args(arg_len, arg_list):
+
     if arg_len == 2 or arg_len == 4:
         if arg_len == 2:
-            return check_url(arg_list[1]), "./"
+            return check_url(arg_list[1]), "./", "single_post"
         elif arg_len == 4:
-            response = check_url(arg_list[1])
-            if arg_list[2] == "-p":
-                return response, arg_list[3]
+            if arg_list[2] == "-p" or arg_list[2] == "--path":
+                return check_url(arg_list[1]), arg_list[3], "single_post"
             else:
-                print(f"[!] Usage: {arg_list[0]} <URL> [-p <PATH>]")
-                exit(0)
+                usage(arg_list[0])
+    elif arg_len == 3 or arg_len == 5:
+        if arg_len == 3:
+            if arg_list[1] == "-d" or arg_list[1] == "--dump":
+                return check_url(arg_list[2]), "./", "dump"
+            else:
+                usage(arg_list[0])
+        elif arg_len == 5:
+            if arg_list[3] == "-p" or arg_list[3] == "--path":
+                return check_url(arg_list[2]), arg_list[4], "dump"
+            else:
+                usage(arg_list[0])    
     else:
-        print(f"[!] Usage: {arg_list[0]} <URL> [-p <PATH>]")
-        exit(0)
+        usage(arg_list[0])
 
 def select_media(type_name, base_data, download_path):
     if type_name == 'GraphImage':
