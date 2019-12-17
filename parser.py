@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import os, re, json, requests
+import os, time, re, json, requests
 from bs4 import BeautifulSoup
 from urllib.request import urlopen, urlretrieve
 from sys import exit
@@ -7,6 +7,8 @@ from sys import exit
 def find_elements(html, base_url):
     soup = BeautifulSoup(html, 'html.parser')
     a = soup.findAll('a')
+
+    print("[*] Isolating user data...")
     urls = [x['href'] for x in a]
     links = list()
     base = base_url.rstrip("/")
@@ -20,13 +22,30 @@ def load_js(url):
     from selenium import webdriver
     from selenium.webdriver.chrome.options import Options
 
+    print("[*] Loading profile...")
     chrome_options = Options()
     chrome_options.add_argument("--headless")
     chrome_options.add_argument("--window-size=1920x1080")
     driver = webdriver.Chrome(options=chrome_options)
     driver.get(url)
     
+    print("[*] Calculating number of posts...")
     loaded_page_source = driver.page_source
+    soup = BeautifulSoup(loaded_page_source, 'html.parser')
+    posts = soup.findAll('span')[1].text
+    
+    print(f"[*] Number of user posts: {posts}")
+
+    # Scroll page based on the number of user's posts
+    if int(posts) < 12:
+        pass
+    else:
+        scroll_iteration = int(posts) // 9
+        for i in range(scroll_iteration):
+            print(f"[*] Indexing ({i})...")
+            driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+            time.sleep(3)
+    
     driver.quit()
     
     return loaded_page_source
@@ -47,6 +66,7 @@ def check_path(path):
 
 def parse_data(html):
     try:
+        print("[*] Parsing post data...")
         soup = BeautifulSoup(html, 'html.parser')
         shared_data = soup.find('script', text=re.compile('window._sharedData'))
         json_raw = shared_data.text.split(' = ', 1)[1].rstrip(';')
@@ -62,13 +82,13 @@ def parse_data(html):
 def get_graph_image(base_data, download_path):
     display_url, file_name = base_data['display_url'], base_data['taken_at_timestamp']    
     download_file_name = f"{download_path}/{str(file_name)}.jpg"
-    print(f"[*] Downloading {file_name}...")
+    print(f"[*] Downloading {file_name} as {download_file_name}...")
     urlretrieve(display_url, check_path(download_file_name))
 
 def get_graph_video(base_data, download_path):
     video_url, file_name = base_data['video_url'], base_data['taken_at_timestamp']
     download_file_name = f"{download_path}/{str(file_name)}.mp4"
-    print(f"[*] Downloading {file_name}...")
+    print(f"[*] Downloading {file_name} as {download_file_name}...")
     urlretrieve(video_url, check_path(download_file_name))
 
 def get_graph_sideCar(base_data, download_path):
@@ -83,12 +103,12 @@ def get_graph_sideCar(base_data, download_path):
         if not is_video:
             display_url = edge['node']['display_url']
             download_file_name += ".jpg"
-            print(f"[*] Downloading {file_name}...")
+            print(f"[*] Downloading {file_name} as {download_file_name}...")
             urlretrieve(display_url, check_path(download_file_name))
         else:
             video_url = edge['node']['video_url']
             download_file_name += ".mp4"
-            print(f"[*] Downloading {file_name}...")
+            print(f"[*] Downloading {file_name} as {download_file_name}...")
             urlretrieve(video_url, check_path(download_file_name))
         counter += 1
 
