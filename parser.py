@@ -5,17 +5,20 @@ from urllib.request import urlopen, urlretrieve
 from sys import exit
 
 def find_elements(html, base_url):
+
     soup = BeautifulSoup(html, 'html.parser')
     a = soup.findAll('a')
 
     print("[*] Isolating user data...")
     urls = [x['href'] for x in a]
+        
     links = list()
     base = base_url.rstrip("/")
 
     for u in urls:
         if "/p/" in u:
             links.append(f"{base}{u}")
+    
     return links
 
 def load_js(url):
@@ -32,23 +35,54 @@ def load_js(url):
     print("[*] Calculating number of posts...")
     loaded_page_source = driver.page_source
     soup = BeautifulSoup(loaded_page_source, 'html.parser')
-    posts = soup.findAll('span')[1].text
-    
-    print(f"[*] Number of user posts: {posts}")
+    posts = soup.findAll('span')
+    stats = [x.text for x in posts[:3]]
+
+    if stats[0] != '':
+        post_count = int(stats[0])
+    else:
+        post_count = int(stats[1])
+         
+    print(f"[*] Number of user posts: {post_count}")
 
     # Scroll page based on the number of user's posts
-    if int(posts) < 12:
-        pass
-    else:
-        scroll_iteration = int(posts) // 9
-        for i in range(scroll_iteration):
-            print(f"[*] Indexing ({i})...")
-            driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-            time.sleep(3)
+    #links = list()
+    # link_urls = list()
+
+    # if int(post_count) < 12:
+    #     pass
+    # else:
+    #     scroll_iteration = int(post_count) // 9
+    #     for i in range(scroll_iteration):
+    #         print(f"[*] Indexing ({i})...")
+    #         source_scroll = driver.page_source
+    #         soup = BeautifulSoup(source_scroll, 'html.parser')
+    #         a = soup.findAll('a')
+    #         for x in a:
+    #             if x['href'] not in link_urls: 
+    #                 link_urls.append(x['href'])
+    #             else:
+    #                 continue
+
+    #         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+            
+            #links = find_elements(loaded_page_source, url)
+            #links_list.append(links)
+
+
+    #        time.sleep(3)
+
+
+    indexed_page_source = driver.page_source
+        # print(link_urls)
+        # exit(0)
+    
     
     driver.quit()
+
     
-    return loaded_page_source
+    
+    return indexed_page_source
 
 def dump(html, base_url, path):
     links = find_elements(html, base_url)
@@ -66,7 +100,7 @@ def check_path(path):
 
 def parse_data(html):
     try:
-        print("[*] Parsing post data...")
+        #print("[*] Parsing post data...")
         soup = BeautifulSoup(html, 'html.parser')
         shared_data = soup.find('script', text=re.compile('window._sharedData'))
         json_raw = shared_data.text.split(' = ', 1)[1].rstrip(';')

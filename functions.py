@@ -27,7 +27,7 @@ def check_args(arg_len, arg_list):
 
     if arg_len == 2 or arg_len == 4:
         if arg_len == 2:
-            return check_url(arg_list[1]), "./", "single_post"
+            return check_url(arg_list[1]), ".", "single_post"
         elif arg_len == 4:
             if arg_list[2] == "-p" or arg_list[2] == "--path":
                 return check_url(arg_list[1]), arg_list[3], "single_post"
@@ -36,7 +36,7 @@ def check_args(arg_len, arg_list):
     elif arg_len == 3 or arg_len == 5:
         if arg_len == 3:
             if arg_list[1] == "-d" or arg_list[1] == "--dump":
-                return check_url(arg_list[2]), "./", "dump"
+                return check_url(arg_list[2]), ".", "dump"
             else:
                 usage(arg_list[0])
         elif arg_len == 5:

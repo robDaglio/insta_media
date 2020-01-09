@@ -12,13 +12,20 @@ if __name__ == '__main__':
     show_splash()
     time.sleep(1)
     
+    # Parse all given arguments and return needed values
     html, path, op_type = check_args(len(argv), argv)
+    
+    # Process link as a single post url
     if op_type == "single_post":
         base_data, type_name = parse_data(html)
         select_media(type_name, base_data, path)
         print("[*] Done!")
+    # Process comprehensive dump of all media
     else:
-        html = load_js(argv[2])
+        # 
+        # Use selenium to preload embedded js
+        html = load_js(argv[2])   
+
         links, dump_dir = dump(html, argv[2], path)
         for l in links:
             link_html = urlopen(l).read()
